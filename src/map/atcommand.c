@@ -6317,40 +6317,121 @@ ACMD_FUNC(autoloot)
 	return 0;
 }
 
+
+
+
+
 /*==========================================
- * @alootid
- *------------------------------------------*/
-ACMD_FUNC(autolootitem)
+* @autolootitems
+*------------------------------------------*/
+int atcommand_autolootitems(const int fd, struct map_session_data* sd, const char* command, const char* message)
 {
-	struct item_data *item_data = NULL;
+struct item_data *item_data[10];
+char chaine[200];
+const char *pointeur;
+char *separateur = { " " };
+int i,k=0;
 
-	if (!message || !*message) {
-		if (sd->state.autolootid) {
-			sd->state.autolootid = 0;
-			clif_displaymessage(fd, "Autolootitem has been turned OFF.");
-		} else
-			clif_displaymessage(fd, "Please, enter item name or it's ID (usage: @alootid <item_name_or_ID>).");
+if (!message || !*message) {
+if (sd->state.autolootid[0]) {
+for(i=0;i<10;i++)
+sd->state.autolootid[i] = 0;
+clif_displaymessage(fd, "Autolootitem have been turned OFF.");
+} else
+clif_displaymessage(fd, "usage: @autolootitem <ID> x 10.");
 
-		return -1;
-	}
-
-	if ((item_data = itemdb_exists(atoi(message))) == NULL)
-		item_data = itemdb_searchname(message);
-
-	if (!item_data) {
-		// No items founds in the DB with Id or Name
-		clif_displaymessage(fd, "Item not found.");
-		return -1;
-	}
-
-	sd->state.autolootid = item_data->nameid; // Autoloot Activated
-
-	sprintf(atcmd_output, "Autolooting item: '%s'/'%s' (%d)",
-		item_data->name, item_data->jname, item_data->nameid);
-	clif_displaymessage(fd, atcmd_output);
-
-	return 0;
+return -1;
 }
+
+for(i=0;i<200;i++)
+if(message[i] != '0')
+chaine[i] = message[i];
+
+for(i=0;i<10;i++)
+item_data[i] = NULL;
+
+pointeur = strtok( chaine, separateur );
+item_data[k++] = itemdb_exists(atoi(pointeur));
+
+while( pointeur != NULL )
+{
+if(k == 10)
+break;
+pointeur = strtok( NULL, separateur );
+if ( pointeur != NULL )
+item_data[k++] = itemdb_exists(atoi(pointeur));
+}
+
+for(i=0;i<k;i++)
+{
+if (!item_data[i]) {
+// No items founds in the DB with Id or Name
+clif_displaymessage(fd, "Item not found.");
+return -1;
+}
+}
+
+for(i=0;i<k;i++)
+{
+sd->state.autolootid[i] = item_data[i]->nameid; // Autoloot Activated
+
+sprintf(atcmd_output, "Autolooting Item: '%s'/'%s' {%d}",
+item_data[i]->name, item_data[i]->jname, item_data[i]->nameid);
+clif_displaymessage(fd, atcmd_output);
+}
+
+return 0;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//-------new
+
+///*==========================================
+// * @alootid
+// *------------------------------------------*/
+//ACMD_FUNC(autolootitem)
+//{
+//	struct item_data *item_data = NULL;
+
+//	if (!message || !*message) {
+//		if (sd->state.autolootid) {
+//			sd->state.autolootid = 0;
+//			clif_displaymessage(fd, "Autolootitem has been turned OFF.");
+//		} else
+//			clif_displaymessage(fd, "Please, enter item name or it's ID (usage: @alootid <item_name_or_ID>).");
+//
+//		return -1;
+//	}
+
+//	if ((item_data = itemdb_exists(atoi(message))) == NULL)
+//		item_data = itemdb_searchname(message);
+//
+//	if (!item_data) {
+		// No items founds in the DB with Id or Name
+//		clif_displaymessage(fd, "Item not found.");
+//		return -1;
+//	}
+//
+//	sd->state.autolootid = item_data->nameid; // Autoloot Activated
+
+//	sprintf(atcmd_output, "Autolooting item: '%s'/'%s' (%d)",
+//		item_data->name, item_data->jname, item_data->nameid);
+//	clif_displaymessage(fd, atcmd_output);
+
+//	return 0;
+//}
 
 /*==========================================
  * It is made to rain.
@@ -9115,7 +9196,7 @@ AtCommandInfo atcommand_info[] = {
 	{ "disguiseall",       99,99,     atcommand_disguiseall },
 	{ "changelook",        60,60,     atcommand_changelook },
 	{ "autoloot",          10,10,     atcommand_autoloot },
-	{ "alootid",           10,10,     atcommand_autolootitem },
+	{ "alootid",           10,10,     atcommand_autolootitems },
 	{ "mobinfo",            1,1,      atcommand_mobinfo },
 	{ "monsterinfo",        1,1,      atcommand_mobinfo },
 	{ "mi",                 1,1,      atcommand_mobinfo },
